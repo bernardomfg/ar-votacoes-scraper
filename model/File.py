@@ -1,6 +1,9 @@
-from typing_extensions import Required
 from mongoengine import *
 
 class File(Document):
-    file_url = URLField()
+    file_url = URLField(required=True)
+    isParsed = BooleanField()
+    localFilePath = StringField()
+
+
     
