@@ -1,0 +1,1 @@
+AR_ARCHIVE_BASE_URL = "https://www.parlamento.pt/ArquivoDocumentacao/Paginas/Arquivodevotacoes.aspx"
