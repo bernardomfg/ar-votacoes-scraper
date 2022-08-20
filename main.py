@@ -1,3 +1,8 @@
+from sqlite3 import DataError
+from urllib.parse import urlparse, parse_qs
+from urllib.request import urlretrieve
+from model.File import File
+from datetime import datetime
 import pandas as pd
 import re
 import requests
@@ -5,18 +10,24 @@ from bs4 import BeautifulSoup as bs
 import dotenv
 import os
 import constants
-from mongoengine import connect
-import urllib.request
+import mongoengine as mongo
+
 
 dotenv.load_dotenv()
-
-# connect(os.getenv('DB_MONGODB_CONNECTION_STRING'))
+mongo.connect(host=os.getenv('DB_MONGODB_CONNECTION_STRING'))
 
 response = requests.get(constants.AR_ARCHIVE_BASE_URL)
 soup = bs(response.content, "html.parser")
 
-divs = soup.findAll("a", attrs={"title": re.compile("^Resultado")})
+votings = soup.findAll("a", attrs={"title": re.compile("^Resultado")})
 
-pdf_url = divs[0]['href']
-print(divs[0]['href'])
-urllib.request.urlretrieve(pdf_url, os.getenv("FILESYSTEM_ROOT_PATH") + "/filename.pdf")
+for voting in votings:
+    filename = parse_qs(urlparse(voting['href']).query)['Fich'][0]
+    filePath = os.getenv("FILESYSTEM_ROOT_PATH") + "/" + filename
+    fileDoc = File(file_url=voting['href'], isParsed=False, filename=filename, localFilePath=filePath, created=datetime.now())
+    try:
+        fileDoc.save()
+        urlretrieve(fileDoc.file_url, fileDoc.localFilePath)
+    except mongo.errors.NotUniqueError:
+        print("Already added on db")
+        continue
