@@ -1,33 +1,33 @@
-from sqlite3 import DataError
-from urllib.parse import urlparse, parse_qs
-from urllib.request import urlretrieve
-from model.File import File
-from datetime import datetime
-import pandas as pd
-import re
-import requests
-from bs4 import BeautifulSoup as bs
-import dotenv
+# main.py
 import os
-import constants
+import dotenv
 import mongoengine as mongo
+from modules.database import connect_to_database
+from modules.web_scraping import scrape_webpage, extract_filename_from_url
+from modules.file_processing import process_file
+from constants import AR_ARCHIVE_BASE_URL
 
+def main():
+    #load environment variables
+    dotenv.load_dotenv()
+    # Filesystem constants
+    filesystem_root_path = os.getenv("FILESYSTEM_ROOT_PATH")
+    # Database constants
+    dbConnectionString = os.getenv('DB_MONGODB_CONNECTION_STRING')
 
-dotenv.load_dotenv()
-mongo.connect(host=os.getenv('DB_MONGODB_CONNECTION_STRING'))
+    # Connect to the database
+    connect_to_database(dbConnectionString)
 
-response = requests.get(constants.AR_ARCHIVE_BASE_URL)
-soup = bs(response.content, "html.parser")
+    # Scraping the webpage
+    votings = scrape_webpage(AR_ARCHIVE_BASE_URL)
 
-votings = soup.findAll("a", attrs={"title": re.compile("^Resultado")})
+    # Process files
+    for voting in votings:
+        url = voting['href']
+        print("url",url)
+        filename = extract_filename_from_url(url)
+        file_path = os.path.join(filesystem_root_path, filename)
+        process_file(url, filename, file_path)
 
-for voting in votings:
-    filename = parse_qs(urlparse(voting['href']).query)['Fich'][0]
-    filePath = os.getenv("FILESYSTEM_ROOT_PATH") + "/" + filename
-    fileDoc = File(file_url=voting['href'], isParsed=False, filename=filename, localFilePath=filePath, created=datetime.now())
-    try:
-        fileDoc.save()
-        urlretrieve(fileDoc.file_url, fileDoc.localFilePath)
-    except mongo.errors.NotUniqueError:
-        print("Already added on db")
-        continue
+if __name__ == "__main__":
+    main()
