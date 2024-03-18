@@ -51,6 +51,6 @@ def process_file(url, filename, file_path):
     try:
         file_doc.save()
         urlretrieve(file_doc.file_url, file_doc.localFilePath)
-        print("Inserted Successfully!", file_doc.filename)
+        logging.info(f"Inserted Successfully!: {file_doc.filename}")
     except mongo.errors.NotUniqueError:
         print("File already exists in the database, skipping.")
