@@ -47,7 +47,7 @@ def process_file(url, filename, file_path):
         votingDate=voting_date
     )
 
-    print("Processing file:", file_doc.filename)
+    logging.info(f"Processing file:{file_doc.filename}")
     try:
         file_doc.save()
         urlretrieve(file_doc.file_url, file_doc.localFilePath)
