@@ -24,7 +24,7 @@ def main():
     # Process files
     for voting in votings:
         url = voting['href']
-        print("url",url)
+        logging.info(f"Fetching {url}")
         filename = extract_filename_from_url(url)
         file_path = os.path.join(filesystem_root_path, filename)
         process_file(url, filename, file_path)
