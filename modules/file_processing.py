@@ -35,7 +35,7 @@ def process_file(url, filename, file_path):
     voting_date = extract_date_from_filename(filename)
     
     if voting_date is None:
-        print(f"No valid voting date found in filename: {filename}")
+        logging.error(f"No valid voting date found in filename: {filename}")
         return
     
     file_doc = File(
