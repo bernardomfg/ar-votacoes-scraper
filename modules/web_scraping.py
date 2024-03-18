@@ -1,4 +1,5 @@
 # modules/web_scraping.py
+import logging
 import requests
 import re
 from bs4 import BeautifulSoup
