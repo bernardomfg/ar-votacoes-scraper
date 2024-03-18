@@ -1,6 +1,7 @@
 # main.py
 import os
 import dotenv
+import logging
 import mongoengine as mongo
 from modules.database import connect_to_database
 from modules.web_scraping import scrape_webpage, extract_filename_from_url
