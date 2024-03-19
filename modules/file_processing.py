@@ -1,5 +1,6 @@
 # modules/file_processing.py
 import re
+import logging
 import mongoengine as mongo
 from datetime import datetime
 from urllib.request import urlretrieve
