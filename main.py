@@ -16,18 +16,30 @@ import mongoengine as mongo
 dotenv.load_dotenv()
 mongo.connect(host=os.getenv('DB_MONGODB_CONNECTION_STRING'))
 
-response = requests.get(constants.AR_ARCHIVE_BASE_URL)
-soup = bs(response.content, "html.parser")
+# get the years to be scraped
+currentYear = datetime.now().year
+lowerBoundYear = constants.AR_ARCHIVE_BASE_URL_ANO_LOWER_BOUND
+years = range(lowerBoundYear, currentYear + 1)
 
-votings = soup.findAll("a", attrs={"title": re.compile("^Resultado")})
+# get the url and suffix
+url = constants.AR_ARCHIVE_BASE_URL
+urlSuffix = constants.AR_ARCHIVE_BASE_URL_ANO_SUFFIX
 
-for voting in votings:
-    filename = parse_qs(urlparse(voting['href']).query)['Fich'][0]
-    filePath = os.getenv("FILESYSTEM_ROOT_PATH") + "/" + filename
-    fileDoc = File(file_url=voting['href'], isParsed=False, filename=filename, localFilePath=filePath, created=datetime.now())
-    try:
-        fileDoc.save()
-        urlretrieve(fileDoc.file_url, fileDoc.localFilePath)
-    except mongo.errors.NotUniqueError:
-        print("Already added on db")
-        continue
+# get the years and the votings
+for year in years:
+    url = url + urlSuffix + str(year)
+    response = requests.get(url)
+    soup = bs(response.content, "html.parser")
+
+    votings = soup.findAll("a", attrs={"title": re.compile("^Resultado")})
+
+    for voting in votings:
+        filename = parse_qs(urlparse(voting['href']).query)['Fich'][0]
+        filePath = os.getenv("FILESYSTEM_ROOT_PATH") + "/" + filename
+        fileDoc = File(file_url=voting['href'], isParsed=False, filename=filename, localFilePath=filePath, created=datetime.now())
+        try:
+            fileDoc.save()
+            urlretrieve(fileDoc.file_url, fileDoc.localFilePath)
+        except mongo.errors.NotUniqueError:
+            print("Already added on db")
+            continue
